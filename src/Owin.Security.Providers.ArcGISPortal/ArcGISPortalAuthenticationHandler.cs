@@ -82,8 +82,9 @@ namespace Owin.Security.Providers.ArcGISPortal
 
                 // Deserializes the token response
                 dynamic response = JsonConvert.DeserializeObject<dynamic>(text);
-                var accessToken = (string)response.access_token;
-                var refreshToken = (string)response.refresh_token;
+                string accessToken = response.access_token;
+                string refreshToken = response.refresh_token;
+                int expiresIn = response.expires_in;
 
                 // Get the ArcGISPortal user
                 var userRequest = new HttpRequestMessage(HttpMethod.Get, Options.Endpoints.UserInfoEndpoint + "?f=json&token=" + Uri.EscapeDataString(accessToken));
@@ -93,7 +94,7 @@ namespace Owin.Security.Providers.ArcGISPortal
                 text = await userResponse.Content.ReadAsStringAsync();
                 var user = JsonConvert.DeserializeObject<Provider.ArcGISPortalUser>(text);
 
-                var context = new ArcGISPortalAuthenticatedContext(Context, user, accessToken, refreshToken, _host)
+                var context = new ArcGISPortalAuthenticatedContext(Context, user, accessToken, expiresIn, refreshToken, _host)
                 {
                     Identity = new ClaimsIdentity(
                         Options.AuthenticationType,
@@ -119,6 +120,15 @@ namespace Owin.Security.Providers.ArcGISPortal
                 if (!string.IsNullOrEmpty(context.Link))
                 {
                     context.Identity.AddClaim(new Claim("urn:ArcGISPortal:url", context.Link, XmlSchemaString, Options.AuthenticationType));
+                }
+                if (!string.IsNullOrEmpty(context.AccessToken))
+                {
+                    context.Identity.AddClaim(new Claim("urn:ArcGISPortal:access_token", context.AccessToken, XmlSchemaString, Options.AuthenticationType));
+                    context.Identity.AddClaim(new Claim("urn:ArcGISPortal:expires_in", context.AccessTokenExpiresIn.ToString(), XmlSchemaString, Options.AuthenticationType));
+                }
+                if (!string.IsNullOrEmpty(context.RefreshToken))
+                {
+                    context.Identity.AddClaim(new Claim("urn:ArcGISPortal:refresh_token", context.RefreshToken, XmlSchemaString, Options.AuthenticationType));
                 }
 
                 context.Properties = properties;
