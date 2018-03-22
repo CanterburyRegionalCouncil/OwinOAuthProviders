@@ -19,15 +19,17 @@ namespace Owin.Security.Providers.ArcGISPortal
         /// </summary>
         /// <param name="context">The OWIN environment</param>
         /// <param name="user">The ArcGIS Portal user</param>
-        /// <param name="accessToken">ArcGIS Portal Access token</param>
-        /// <param name="refreshToken">ArcGIS Portal Refresh token</param>
-        /// <param name="host">ArcGIS Portal Host</param>
-        public ArcGISPortalAuthenticatedContext(IOwinContext context, ArcGISPortalUser user, string accessToken, string refreshToken, string host)
+        /// <param name="accessToken">ArcGIS Portal access token</param>
+        /// <param name="expiresIn">Number of seconds ArcGIS Portal access token expires in</param>
+        /// <param name="refreshToken">ArcGIS Portal refresh token</param>
+        /// <param name="host">ArcGIS Portal host</param>
+        public ArcGISPortalAuthenticatedContext(IOwinContext context, ArcGISPortalUser user, string accessToken, int expiresIn, string refreshToken, string host)
             : base(context)
         {
             Uri hostUri = new Uri(host);
 
             AccessToken = accessToken;
+            AccessTokenExpiresIn = expiresIn;
             RefreshToken = refreshToken;
             Id = user.Username;
             Name = user.FullName;
@@ -40,6 +42,11 @@ namespace Owin.Security.Providers.ArcGISPortal
         /// Gets the ArcGIS Portal access token
         /// </summary>
         public string AccessToken { get; private set; }
+
+        /// <summary>
+        /// Number of seconds access token will expire in
+        /// </summary>
+        public int AccessTokenExpiresIn { get; private set; }
 
         /// <summary>
         /// Gets the ArcGIS Portal refresh token
